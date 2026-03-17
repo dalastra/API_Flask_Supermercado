@@ -1,7 +1,7 @@
 # API SUPERMERCADO
 # Sistema de Produtos — API FastAPI com CSV
 
-Este projeto é uma API simples construída com *FastAPI, utilizando um arquivo **CSV* como banco de dados para armazenar produtos.
+Este projeto é uma API simples construída com *FastAPI*, utilizando um arquivo *CSV* como banco de dados para armazenar produtos.
 
 A API permite:
 
