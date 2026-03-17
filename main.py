@@ -10,22 +10,23 @@ app = FastAPI()
 # =========================
 
 clientes_path = 'Clientes.csv'
+clientes_id_path = 'clientes_id.txt'
 
 
 def gerar_id_cliente():
-    ids = []
+    if not os.path.exists(clientes_id_path):
+        with open(clientes_id_path, 'w') as f:
+            f.write('0')
 
-    with open(clientes_path, mode='r', newline='', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            if row[0] == 'ID':
-                continue
-            ids.append(int(row[0]))
+    with open(clientes_id_path, 'r') as f:
+        ultimo_id = int(f.read())
 
-    if len(ids) == 0:
-        return 1
+    novo_id = ultimo_id + 1
 
-    return max(ids) + 1
+    with open(clientes_id_path, 'w') as f:
+        f.write(str(novo_id))
+
+    return novo_id
 
 
 def cpf_existe(cpf):
@@ -62,22 +63,20 @@ class ClienteAtualizar(BaseModel):
 
 @app.get("/clientes")
 def clientes():
-    Clientes = {}
-
+    lista = []
     with open(clientes_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
         for row in reader:
             if row[0] == 'ID':
                 continue
-
-            Clientes[row[0]] = {
+            lista.append({
+                "id": int(row[0]),
                 "nome": row[1],
                 "sobrenome": row[2],
                 "nascimento": row[3],
                 "cpf": row[4]
-            }
-
-    return Clientes
+            })
+    return lista
 
 
 @app.post("/clientes")
@@ -99,13 +98,7 @@ def add_cliente(cliente: ClienteCriar):
 
     novo_id = gerar_id_cliente()
 
-    data.append([
-        novo_id,
-        cliente.nome,
-        cliente.sobrenome,
-        cliente.nascimento,
-        cliente.cpf
-    ])
+    data.append([novo_id, cliente.nome, cliente.sobrenome, cliente.nascimento, cliente.cpf])
 
     with open(clientes_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
@@ -122,20 +115,13 @@ def atualizar_cliente(cliente: ClienteAtualizar):
 
     with open(clientes_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-
         for row in reader:
             if row[0] == 'ID':
                 continue
 
             if int(row[0]) == cliente.id:
                 encontrado = True
-                data.append([
-                    cliente.id,
-                    cliente.nome,
-                    cliente.sobrenome,
-                    cliente.nascimento,
-                    cliente.cpf
-                ])
+                data.append([cliente.id, cliente.nome, cliente.sobrenome, cliente.nascimento, cliente.cpf])
             else:
                 data.append(row)
 
@@ -150,19 +136,18 @@ def atualizar_cliente(cliente: ClienteAtualizar):
 
 
 @app.delete("/clientes/{id}")
-def del_cliente(id: str):
+def del_cliente(id: int):
 
     data = [["ID", "NOME", "SOBRENOME", "NASCIMENTO", "CPF"]]
     encontrado = False
 
     with open(clientes_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-
         for row in reader:
             if row[0] == 'ID':
                 continue
 
-            if row[0] == id:
+            if int(row[0]) == id:
                 encontrado = True
                 continue
 
@@ -183,22 +168,23 @@ def del_cliente(id: str):
 # =========================
 
 produtos_path = 'Produtos.csv'
+produtos_id_path = 'produtos_id.txt'
 
 
 def gerar_id_produto():
-    ids = []
+    if not os.path.exists(produtos_id_path):
+        with open(produtos_id_path, 'w') as f:
+            f.write('0')
 
-    with open(produtos_path, mode='r', newline='', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            if row[0] == 'ID':
-                continue
-            ids.append(int(row[0]))
+    with open(produtos_id_path, 'r') as f:
+        ultimo_id = int(f.read())
 
-    if len(ids) == 0:
-        return 1
+    novo_id = ultimo_id + 1
 
-    return max(ids) + 1
+    with open(produtos_id_path, 'w') as f:
+        f.write(str(novo_id))
+
+    return novo_id
 
 
 if not os.path.exists(produtos_path):
@@ -208,6 +194,7 @@ if not os.path.exists(produtos_path):
 
 
 class Produto(BaseModel):
+    id: int
     nome: str
     fornecedor: str
     quantidade: int
@@ -216,21 +203,17 @@ class Produto(BaseModel):
 @app.get("/produtos")
 def produtos():
     lista = []
-
     with open(produtos_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-
         for row in reader:
             if row[0] == 'ID':
                 continue
-
             lista.append({
                 "id": int(row[0]),
                 "nome": row[1],
                 "fornecedor": row[2],
                 "quantidade": int(row[3])
             })
-
     return lista
 
 
@@ -256,8 +239,8 @@ def add_produto(produto: Produto):
     return {"msg": "Produto criado", "id": novo_id}
 
 
-@app.put("/produtos/{id}")
-def update_produto(id: int, produto: Produto):
+@app.put("/produtos")
+def update_produto(produto: Produto):
 
     data = [["ID", "NOME", "FORNECEDOR", "QUANTIDADE"]]
     encontrado = False
@@ -269,9 +252,9 @@ def update_produto(id: int, produto: Produto):
             if row[0] == 'ID':
                 continue
 
-            if int(row[0]) == id:
+            if int(row[0]) == produto.id:
                 encontrado = True
-                data.append([id, produto.nome, produto.fornecedor, produto.quantidade])
+                data.append([produto.id, produto.nome, produto.fornecedor, produto.quantidade])
             else:
                 data.append(row)
 
@@ -286,19 +269,18 @@ def update_produto(id: int, produto: Produto):
 
 
 @app.delete("/produtos/{id}")
-def del_produto(id: str):
+def del_produto(id: int):
 
     data = [["ID", "NOME", "FORNECEDOR", "QUANTIDADE"]]
     encontrado = False
 
     with open(produtos_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-
         for row in reader:
             if row[0] == 'ID':
                 continue
 
-            if row[0] == id:
+            if int(row[0]) == id:
                 encontrado = True
                 continue
 
@@ -319,22 +301,23 @@ def del_produto(id: str):
 # =========================
 
 ordens_path = 'OrdemDeVendas.csv'
+ordens_id_path = 'ordens_id.txt'
 
 
 def gerar_id_ordem():
-    ids = []
+    if not os.path.exists(ordens_id_path):
+        with open(ordens_id_path, 'w') as f:
+            f.write('0')
 
-    with open(ordens_path, mode='r', newline='', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            if row[0] == 'ID':
-                continue
-            ids.append(int(row[0]))
+    with open(ordens_id_path, 'r') as f:
+        ultimo_id = int(f.read())
 
-    if len(ids) == 0:
-        return 1
+    novo_id = ultimo_id + 1
 
-    return max(ids) + 1
+    with open(ordens_id_path, 'w') as f:
+        f.write(str(novo_id))
+
+    return novo_id
 
 
 if not os.path.exists(ordens_path):
@@ -344,6 +327,7 @@ if not os.path.exists(ordens_path):
 
 
 class Ordem(BaseModel):
+    id: int
     cliente_id: int
     produto_id: int
 
@@ -351,20 +335,16 @@ class Ordem(BaseModel):
 @app.get("/ordens")
 def ordens():
     lista = []
-
     with open(ordens_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-
         for row in reader:
             if row[0] == 'ID':
                 continue
-
             lista.append({
                 "id": int(row[0]),
                 "cliente_id": int(row[1]),
                 "produto_id": int(row[2])
             })
-
     return lista
 
 
@@ -381,7 +361,7 @@ def add_ordem(ordem: Ordem):
 
     novo_id = gerar_id_ordem()
 
-    data.append([novo_id, ordem.cliente_id, ordem.produto_id])
+    data.append([novo_id, ordem.cliente_id, ordem.producto_id])
 
     with open(ordens_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
@@ -389,13 +369,13 @@ def add_ordem(ordem: Ordem):
 
     return {"msg": "Ordem criada", "id": novo_id}
 
-@app.put("/ordens/{id}")
-def update_ordem(id: int, ordem: Ordem):
-    
+
+@app.put("/ordens")
+def update_ordem(ordem: Ordem):
+
     data = [["ID", "CLIENTE", "PRODUTO"]]
     encontrado = False
 
-    # Lê o CSV
     with open(ordens_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
 
@@ -403,38 +383,35 @@ def update_ordem(id: int, ordem: Ordem):
             if row[0] == 'ID':
                 continue
 
-            # Se encontrou o ID → atualiza
-            if int(row[0]) == id:
+            if int(row[0]) == ordem.id:
                 encontrado = True
-                data.append([id, ordem.cliente_id, ordem.produto_id])
+                data.append([ordem.id, ordem.cliente_id, ordem.produto_id])
             else:
                 data.append(row)
 
-    # Se não encontrou o ID
     if not encontrado:
         return {"ERRO": "ID não existe"}
 
-    # Reescreve o CSV
     with open(ordens_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerows(data)
 
     return {"msg": "Ordem atualizada"}
 
+
 @app.delete("/ordens/{id}")
-def del_ordem(id: str):
+def del_ordem(id: int):
 
     data = [["ID", "CLIENTE", "PRODUTO"]]
     encontrado = False
 
     with open(ordens_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-
         for row in reader:
             if row[0] == 'ID':
                 continue
 
-            if row[0] == id:
+            if int(row[0]) == id:
                 encontrado = True
                 continue
 
