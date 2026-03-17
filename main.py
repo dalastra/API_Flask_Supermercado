@@ -144,11 +144,20 @@ def del_cliente(id: int):
     with open(clientes_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
         for row in reader:
+
+            # 🔥 ignora linha vazia
+            if not row:
+                continue
+
             if row[0] == 'ID':
                 continue
 
-            if int(row[0]) == id:
-                encontrado = True
+            # 🔥 proteção contra erro
+            try:
+                if int(row[0]) == id:
+                    encontrado = True
+                    continue
+            except:
                 continue
 
             data.append(row)
@@ -361,7 +370,7 @@ def add_ordem(ordem: Ordem):
 
     novo_id = gerar_id_ordem()
 
-    data.append([novo_id, ordem.cliente_id, ordem.producto_id])
+    data.append([novo_id, ordem.cliente_id, ordem.produto_id])
 
     with open(ordens_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
