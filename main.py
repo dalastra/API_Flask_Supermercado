@@ -256,8 +256,8 @@ def add_produto(produto: Produto):
     return {"msg": "Produto criado", "id": novo_id}
 
 
-@app.put("/produtos")
-def update_produto(produto: Produto, id: int):
+@app.put("/produtos/{id}")
+def update_produto(id: int, produto: Produto):
 
     data = [["ID", "NOME", "FORNECEDOR", "QUANTIDADE"]]
     encontrado = False
@@ -389,9 +389,9 @@ def add_ordem(ordem: Ordem):
 
     return {"msg": "Ordem criada", "id": novo_id}
 
-@app.put("/ordens")
-def update_ordem(ordem: Ordem, id: int):
-
+@app.put("/ordens/{id}")
+def update_ordem(id: int, ordem: Ordem):
+    
     data = [["ID", "CLIENTE", "PRODUTO"]]
     encontrado = False
 
