@@ -25,7 +25,6 @@ A API permite:
 
 - Python 3.x  
 - FastAPI  
-- Uvicorn  
 - CSV como armazenamento  
 
 ---
