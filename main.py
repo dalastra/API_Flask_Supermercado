@@ -389,6 +389,37 @@ def add_ordem(ordem: Ordem):
 
     return {"msg": "Ordem criada", "id": novo_id}
 
+@app.put("/ordens")
+def update_ordem(ordem: Ordem, id: int):
+
+    data = [["ID", "CLIENTE", "PRODUTO"]]
+    encontrado = False
+
+    # Lê o CSV
+    with open(ordens_path, mode='r', newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+
+        for row in reader:
+            if row[0] == 'ID':
+                continue
+
+            # Se encontrou o ID → atualiza
+            if int(row[0]) == id:
+                encontrado = True
+                data.append([id, ordem.cliente_id, ordem.produto_id])
+            else:
+                data.append(row)
+
+    # Se não encontrou o ID
+    if not encontrado:
+        return {"ERRO": "ID não existe"}
+
+    # Reescreve o CSV
+    with open(ordens_path, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerows(data)
+
+    return {"msg": "Ordem atualizada"}
 
 @app.delete("/ordens/{id}")
 def del_ordem(id: str):
